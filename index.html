@@ -59,33 +59,6 @@
       z-index: 2;
     }
 
-    /* Hide UI mode */
-    body.ui-hidden .ui-chrome {
-      display: none !important;
-    }
-
-    #btnShowUi {
-      display: none;
-      position: fixed;
-      top: 12px;
-      right: 12px;
-      z-index: 40;
-      background: rgba(13, 20, 36, 0.75);
-      border: 1px solid rgba(56, 189, 248, 0.6);
-      color: #e0f2fe;
-      border-radius: 999px;
-      padding: 6px 12px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    body.ui-hidden #btnShowUi {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
     .top-bar {
       position: fixed;
       top: 10px;
@@ -110,8 +83,8 @@
 
     .pill {
       background: var(--panel);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       border: 1px solid var(--panel-border);
       color: var(--text);
       border-radius: 999px;
@@ -143,8 +116,8 @@
       width: 248px;
       max-width: calc(100vw - 20px);
       background: var(--panel);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       border: 1px solid var(--panel-border);
       border-radius: 14px;
       padding: 10px;
@@ -155,6 +128,7 @@
       gap: 8px;
     }
 
+    .side-panel.hidden-panel,
     .side-panel.collapsed .panel-body {
       display: none;
     }
@@ -175,11 +149,7 @@
       gap: 6px;
     }
 
-    .label {
-      color: var(--muted);
-      font-size: 11px;
-    }
-
+    .label { color: var(--muted); font-size: 11px; }
     .val {
       font-variant-numeric: tabular-nums;
       font-weight: 700;
@@ -205,11 +175,7 @@
       margin: 2px 0;
     }
 
-    .btn-row {
-      display: flex;
-      gap: 5px;
-      flex-wrap: wrap;
-    }
+    .btn-row { display: flex; gap: 5px; flex-wrap: wrap; }
 
     .btn {
       flex: 1;
@@ -231,8 +197,8 @@
       right: 10px;
       width: 132px;
       background: var(--panel);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       border: 1px solid var(--panel-border);
       border-radius: 12px;
       padding: 6px;
@@ -262,8 +228,8 @@
       right: 10px;
       width: 106px;
       background: var(--panel);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       border: 1px solid var(--panel-border);
       border-radius: 12px;
       padding: 6px;
@@ -286,8 +252,8 @@
       left: 10px;
       right: 10px;
       background: var(--panel);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       border: 1px solid var(--panel-border);
       border-radius: 14px;
       padding: 8px 12px;
@@ -361,27 +327,24 @@
     <canvas id="arCanvas"></canvas>
   </div>
 
-  <button id="btnShowUi">👁️ 顯示 UI</button>
   <div class="status-toast" id="toast"></div>
 
-  <!-- Top Bar -->
-  <div class="top-bar ui-chrome">
+  <div class="top-bar">
     <div class="top-group">
       <button class="pill active" id="btnCamera">📷 相機</button>
       <button class="pill warn" id="btnGyro">🧭 陀螺儀</button>
       <button class="pill" id="btnGps">📍 GPS</button>
       <button class="pill active" id="btnGuideBand">🏢 5°–20°</button>
-      <button class="pill" id="btnHideUi">🙈 隱藏 UI</button>
+      <button class="pill" id="btnToggleSettings">👁️ 顯示設定</button>
     </div>
     <div class="top-group">
-      <span class="pill" id="gpsBadge">沙田 · 22.382°N, 114.205°E</span>
+      <span class="pill" id="gpsBadge">等待 GPS · 22.382°N, 114.205°E</span>
     </div>
   </div>
 
-  <!-- Left Control Panel -->
-  <div class="side-panel collapsed ui-chrome" id="sidePanel">
+  <div class="side-panel hidden-panel" id="sidePanel">
     <div class="panel-header" id="panelToggle">
-      <span>🎛️ 設定（點開／收起）</span>
+      <span>🎛️ 設定</span>
       <span>▾</span>
     </div>
     <div class="panel-body" style="display:flex;flex-direction:column;gap:8px;">
@@ -406,21 +369,12 @@
           <span class="val" id="focalVal">400 mm</span>
         </div>
         <input type="range" id="focalSlider" min="16" max="400" step="2" value="400" />
-        <div class="row"><span class="label" id="wideDetectLabel">偵測最 Wide：16mm</span></div>
+        <div class="row"><span class="label" id="wideDetectLabel">偵測最 Wide：約 16mm</span></div>
       </div>
 
-      <div>
-        <div class="row"><span class="label">地點／磁偏角</span></div>
-        <select id="presetLoc" style="margin-top:3px;">
-          <option value="22.3820,114.2050,25,香港沙田（帝堡城附近）">香港沙田（帝堡城附近）</option>
-          <option value="22.3130,114.2250,40,香港九龍東">香港九龍東</option>
-          <option value="35.1709,136.8815,15,日本名古屋">日本名古屋</option>
-          <option value="43.5910,142.4700,220,日本北海道美瑛">日本北海道美瑛</option>
-        </select>
-        <div class="row" style="margin-top:3px;">
-          <span class="label">磁偏角校正</span>
-          <span class="val" id="declinationVal">-3.2°</span>
-        </div>
+      <div class="row">
+        <span class="label">磁偏角校正（依 GPS）</span>
+        <span class="val" id="declinationVal">-3.2°</span>
       </div>
 
       <div>
@@ -441,8 +395,7 @@
     </div>
   </div>
 
-  <!-- 3:2 Telephoto Crop Preview -->
-  <div class="crop-box ui-chrome">
+  <div class="crop-box">
     <div class="crop-title">
       <span>3:2 取景框</span>
       <span id="moonShareVal">~10.3%</span>
@@ -450,8 +403,7 @@
     <canvas id="cropCanvas" width="260" height="173"></canvas>
   </div>
 
-  <!-- Radar Compass -->
-  <div class="radar-card ui-chrome">
+  <div class="radar-card">
     <div class="crop-title">
       <span>羅盤</span>
       <span id="radarAzVal">72°</span>
@@ -459,8 +411,7 @@
     <canvas id="radarCanvas" width="200" height="200"></canvas>
   </div>
 
-  <!-- Bottom Timeline -->
-  <div class="bottom-dock ui-chrome">
+  <div class="bottom-dock">
     <div class="telemetry-strip">
       <div class="telemetry-item">時間：<strong id="timeLabel">22:53</strong></div>
       <div class="telemetry-item">鏡頭：<strong id="camAzLabel">72.0° ENE</strong> / <strong id="camAltLabel">20.0°</strong></div>
@@ -483,6 +434,7 @@
       gyroEnabled: false,
       cameraEnabled: false,
       showGuideBand: true,
+      settingsVisible: false,
       declination: -3.2,
       pinnedSpots: []
     };
@@ -495,6 +447,29 @@
     const radarCtx = radarCanvas.getContext('2d');
     const videoEl = document.getElementById('cameraFeed');
 
+    // Render scheduling state (dirty flag + cached daily trajectory)
+    let needsRender = true;
+    let rafId = null;
+    let trajectoryCacheKey = '';
+    let trajectoryCache = [];
+    let viewW = window.innerWidth;
+    let viewH = window.innerHeight;
+    const lastText = Object.create(null);
+
+    function setTextIfChanged(id, text) {
+      if (lastText[id] !== text) {
+        lastText[id] = text;
+        document.getElementById(id).textContent = text;
+      }
+    }
+
+    function markDirty() {
+      needsRender = true;
+      if (!rafId) {
+        rafId = requestAnimationFrame(renderLoop);
+      }
+    }
+
     function showToast(msg) {
       const el = document.getElementById('toast');
       el.textContent = msg;
@@ -503,13 +478,14 @@
       showToast._t = setTimeout(() => { el.style.display = 'none'; }, 2200);
     }
 
-    function setUiHidden(hidden) {
-      document.body.classList.toggle('ui-hidden', hidden);
-      if (hidden) showToast('已隱藏 UI，按右上角「顯示 UI」還原');
-    }
-
-    document.getElementById('btnHideUi').addEventListener('click', () => setUiHidden(true));
-    document.getElementById('btnShowUi').addEventListener('click', () => setUiHidden(false));
+    const btnToggleSettings = document.getElementById('btnToggleSettings');
+    const sidePanel = document.getElementById('sidePanel');
+    btnToggleSettings.addEventListener('click', () => {
+      state.settingsVisible = !state.settingsVisible;
+      sidePanel.classList.toggle('hidden-panel', !state.settingsVisible);
+      btnToggleSettings.classList.toggle('active', state.settingsVisible);
+      btnToggleSettings.textContent = state.settingsVisible ? '🙈 隱藏設定' : '👁️ 顯示設定';
+    });
 
     function estimateDeclination(lat, lon) {
       const dLat = (lat - 22.38) * 0.08;
@@ -562,6 +538,21 @@
       };
     }
 
+    function getCachedTrajectory() {
+      const key = `${state.dateStr}|${state.lat.toFixed(3)}|${state.lon.toFixed(3)}`;
+      if (key === trajectoryCacheKey) return trajectoryCache;
+      const pts = [];
+      for (let t = 0; t <= 1440; t += 30) {
+        const pos = getMoonPosition(state.dateStr, t, state.lat, state.lon);
+        if (pos.altitude >= -2) {
+          pts.push({ t, az: pos.azimuth, alt: pos.altitude });
+        }
+      }
+      trajectoryCacheKey = key;
+      trajectoryCache = pts;
+      return pts;
+    }
+
     function azToCompass(az) {
       const dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
       return dirs[Math.round(((az % 360) + 360) % 360 / 22.5) % 16];
@@ -581,10 +572,13 @@
     }
 
     function resize() {
+      viewW = window.innerWidth;
+      viewH = window.innerHeight;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      arCanvas.width = window.innerWidth * dpr;
-      arCanvas.height = window.innerHeight * dpr;
+      arCanvas.width = viewW * dpr;
+      arCanvas.height = viewH * dpr;
       arCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      markDirty();
     }
     window.addEventListener('resize', resize);
     resize();
@@ -605,24 +599,23 @@
       lastX = e.clientX;
       lastY = e.clientY;
       const hfov = getHov(state.focalMm);
-      const degPerPx = hfov / Math.max(window.innerWidth, 400);
+      const degPerPx = hfov / Math.max(viewW, 400);
       state.camAz = ((state.camAz - dx * degPerPx * 1.4) % 360 + 360) % 360;
       state.camPitch = Math.max(-15, Math.min(85, state.camPitch + dy * degPerPx * 1.4));
+      markDirty();
     });
 
     window.addEventListener('pointerup', () => { isDragging = false; });
 
     radarCanvas.addEventListener('click', (e) => {
       const rect = radarCanvas.getBoundingClientRect();
-      const cx = rect.width / 2;
-      const cy = rect.height / 2;
-      const x = e.clientX - rect.left - cx;
-      const y = e.clientY - rect.top - cy;
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
       const deg = (Math.atan2(y, x) * 180 / Math.PI + 90 + 360) % 360;
       state.camAz = Number(deg.toFixed(1));
+      markDirty();
     });
 
-    // Detect widest lens approximate focal length from track capabilities if available
     function detectWidestFocal(track) {
       try {
         const caps = track.getCapabilities ? track.getCapabilities() : null;
@@ -630,7 +623,6 @@
           return Math.max(13, Math.round(24 * caps.zoom.min));
         }
       } catch (_) {}
-      // Typical smartphone ultra-wide is ~13-16mm
       return 16;
     }
 
@@ -654,8 +646,8 @@
           slider.min = widest;
           if (state.focalMm < widest) state.focalMm = widest;
           slider.value = state.focalMm;
-          document.getElementById('focalVal').textContent = `${state.focalMm} mm`;
-          document.getElementById('wideDetectLabel').textContent = `偵測最 Wide：約 ${widest}mm`;
+          setTextIfChanged('focalVal', `${state.focalMm} mm`);
+          setTextIfChanged('wideDetectLabel', `偵測最 Wide：約 ${widest}mm`);
           showToast(`已開相機（最 Wide 約 ${widest}mm）`);
         } catch (err) {
           showToast('無法開啟相機，已用模擬畫面');
@@ -669,8 +661,10 @@
         state.cameraEnabled = false;
         btn.classList.remove('active');
       }
+      markDirty();
     });
 
+    let gyroPending = false;
     document.getElementById('btnGyro').addEventListener('click', async () => {
       const btn = document.getElementById('btnGyro');
       if (state.gyroEnabled) {
@@ -686,7 +680,7 @@
             return;
           }
         }
-        window.addEventListener('deviceorientation', handleOrientation);
+        window.addEventListener('deviceorientation', handleOrientation, { passive: true });
         state.gyroEnabled = true;
         btn.classList.add('active');
         showToast('已啟用陀螺儀＋磁偏角修正');
@@ -703,45 +697,61 @@
       } else if (typeof e.alpha === 'number' && !isNaN(e.alpha)) {
         heading = (360 - e.alpha) % 360;
       }
+      let changed = false;
       if (heading !== null) {
-        state.camAz = ((heading + state.declination) % 360 + 360) % 360;
+        const nextAz = ((heading + state.declination) % 360 + 360) % 360;
+        if (Math.abs(nextAz - state.camAz) >= 0.25) {
+          state.camAz = nextAz;
+          changed = true;
+        }
       }
       if (typeof e.beta === 'number' && !isNaN(e.beta)) {
-        state.camPitch = Math.max(-15, Math.min(85, e.beta - 75));
+        const nextPitch = Math.max(-15, Math.min(85, e.beta - 75));
+        if (Math.abs(nextPitch - state.camPitch) >= 0.25) {
+          state.camPitch = nextPitch;
+          changed = true;
+        }
+      }
+      if (changed && !gyroPending) {
+        gyroPending = true;
+        requestAnimationFrame(() => {
+          gyroPending = false;
+          markDirty();
+        });
       }
     }
 
-    document.getElementById('btnGps').addEventListener('click', () => {
-      if (!navigator.geolocation) return;
-      showToast('取得 GPS 中...');
+    function requestCurrentGps(silent) {
+      if (!navigator.geolocation) {
+        if (!silent) showToast('瀏覽器不支援 GPS');
+        return;
+      }
+      if (!silent) showToast('更新 GPS 位置中...');
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           state.lat = Number(pos.coords.latitude.toFixed(4));
           state.lon = Number(pos.coords.longitude.toFixed(4));
           state.declination = estimateDeclination(state.lat, state.lon);
-          document.getElementById('gpsBadge').textContent = `${state.lat}°N, ${state.lon}°E`;
-          document.getElementById('declinationVal').textContent = `${state.declination > 0 ? '+' : ''}${state.declination}°`;
-          showToast(`GPS 已更新（磁偏角 ${state.declination}°）`);
+          setTextIfChanged('gpsBadge', `GPS · ${state.lat}°N, ${state.lon}°E`);
+          setTextIfChanged('declinationVal', `${state.declination > 0 ? '+' : ''}${state.declination}°`);
+          document.getElementById('btnGps').classList.add('active');
+          if (!silent) showToast(`已更新 GPS（磁偏角 ${state.declination}°）`);
+          markDirty();
         },
-        () => showToast('未能取得 GPS')
+        () => {
+          if (!silent) showToast('未能取得 GPS，請檢查定位權限');
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
       );
-    });
+    }
 
-    document.getElementById('presetLoc').addEventListener('change', (e) => {
-      const [lat, lon, alt, name] = e.target.value.split(',');
-      state.lat = parseFloat(lat);
-      state.lon = parseFloat(lon);
-      state.camHeightM = parseInt(alt, 10);
-      state.declination = estimateDeclination(state.lat, state.lon);
-      document.getElementById('camAltSlider').value = state.camHeightM;
-      document.getElementById('camAltVal').textContent = `${state.camHeightM} m`;
-      document.getElementById('gpsBadge').textContent = `${name} · ${state.lat}°N`;
-      document.getElementById('declinationVal').textContent = `${state.declination > 0 ? '+' : ''}${state.declination}°`;
-    });
+    document.getElementById('btnGps').addEventListener('click', () => requestCurrentGps(false));
+    requestCurrentGps(true);
 
     document.getElementById('btnGuideBand').addEventListener('click', (e) => {
       state.showGuideBand = !state.showGuideBand;
       e.currentTarget.classList.toggle('active', state.showGuideBand);
+      markDirty();
     });
 
     document.getElementById('panelToggle').addEventListener('click', () => {
@@ -752,24 +762,31 @@
       state.dateStr = e.target.value;
       document.getElementById('dateInput').value = e.target.value;
       showToast(`已選滿月日：${e.target.value}`);
+      markDirty();
     });
 
     document.getElementById('dateInput').addEventListener('change', (e) => {
-      if (e.target.value) state.dateStr = e.target.value;
+      if (e.target.value) {
+        state.dateStr = e.target.value;
+        markDirty();
+      }
     });
 
     document.getElementById('focalSlider').addEventListener('input', (e) => {
       state.focalMm = parseInt(e.target.value, 10);
-      document.getElementById('focalVal').textContent = `${state.focalMm} mm`;
+      setTextIfChanged('focalVal', `${state.focalMm} mm`);
+      markDirty();
     });
 
     document.getElementById('camAltSlider').addEventListener('input', (e) => {
       state.camHeightM = parseInt(e.target.value, 10);
-      document.getElementById('camAltVal').textContent = `${state.camHeightM} m`;
+      setTextIfChanged('camAltVal', `${state.camHeightM} m`);
+      markDirty();
     });
 
     document.getElementById('timeSlider').addEventListener('input', (e) => {
       state.minutesOfDay = parseInt(e.target.value, 10);
+      markDirty();
     });
 
     function findGoldenAltitude(targetAlt) {
@@ -789,6 +806,7 @@
       state.camAz = Number(pos.azimuth.toFixed(1));
       state.camPitch = Math.max(2, Math.min(30, Number(pos.altitude.toFixed(1))));
       showToast(`${formatTime(bestMin)} · 約 ${pos.altitude.toFixed(1)}°`);
+      markDirty();
     }
 
     document.getElementById('btnGoldenRise').addEventListener('click', () => findGoldenAltitude(10));
@@ -841,8 +859,9 @@
       document.getElementById('dateInput').value = s.date;
       document.getElementById('timeSlider').value = s.mins;
       document.getElementById('focalSlider').value = s.focal;
-      document.getElementById('focalVal').textContent = `${s.focal} mm`;
+      setTextIfChanged('focalVal', `${s.focal} mm`);
       showToast('已載入機位');
+      markDirty();
     };
 
     window.deleteSpot = function(idx) {
@@ -869,8 +888,8 @@
     loadSpots();
 
     function draw() {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
+      const w = viewW;
+      const h = viewH;
       const hfov = getHov(state.focalMm);
       const vfov = hfov * (h / Math.max(w, 1));
 
@@ -887,7 +906,7 @@
 
         arCtx.beginPath();
         arCtx.moveTo(0, h);
-        for (let sx = 0; sx <= w; sx += 24) {
+        for (let sx = 0; sx <= w; sx += 32) {
           const azAtX = state.camAz + ((sx / w) - 0.5) * hfov;
           const ridgeAlt = 6 + 5 * Math.sin(azAtX * 0.12) + 2.5 * Math.cos(azAtX * 0.29);
           const sy = horizonY - ((ridgeAlt - state.camPitch) / vfov) * h + heightOffset * 0.25;
@@ -895,15 +914,15 @@
         }
         arCtx.lineTo(w, h);
         arCtx.closePath();
-        arCtx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+        arCtx.fillStyle = 'rgba(15, 23, 42, 0.92)';
         arCtx.fill();
 
-        for (let sx = 0; sx < w; sx += 76) {
+        arCtx.fillStyle = 'rgba(20, 30, 48, 0.95)';
+        for (let sx = 0; sx < w; sx += 80) {
           const azAtX = state.camAz + ((sx / w) - 0.5) * hfov;
           const bldgTopAlt = 8 + 9 * Math.abs(Math.sin(azAtX * 0.23 + 1.1));
           const topY = horizonY - ((bldgTopAlt - state.camPitch) / vfov) * h + heightOffset * 0.5;
-          arCtx.fillStyle = 'rgba(20, 30, 48, 0.95)';
-          arCtx.fillRect(sx + 4, topY, 68, h - topY);
+          arCtx.fillRect(sx + 4, topY, 72, h - topY);
         }
       } else {
         arCtx.clearRect(0, 0, w, h);
@@ -918,8 +937,8 @@
         arCtx.fillStyle = 'rgba(56, 189, 248, 0.08)';
         arCtx.fillRect(0, Math.min(y20, y5), w, Math.abs(y5 - y20));
         arCtx.setLineDash([6, 6]);
-        arCtx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
-        arCtx.lineWidth = 1;
+        arCtx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+        arCtx.lineWidth = 1.2;
         arCtx.beginPath();
         arCtx.moveTo(0, y20); arCtx.lineTo(w, y20);
         arCtx.moveTo(0, y5); arCtx.lineTo(w, y5);
@@ -927,47 +946,57 @@
         arCtx.setLineDash([]);
       }
 
-      const points = [];
-      for (let t = 0; t <= 1440; t += 30) {
-        const pos = getMoonPosition(state.dateStr, t, state.lat, state.lon);
-        if (pos.altitude >= -2) {
-          points.push({
-            t,
-            az: pos.azimuth,
-            alt: pos.altitude,
-            x: degToScreenX(pos.azimuth),
-            y: altToScreenY(pos.altitude)
-          });
-        }
-      }
-
-      if (points.length > 1) {
+      const rawPts = getCachedTrajectory();
+      if (rawPts.length > 1) {
         arCtx.beginPath();
-        points.forEach((p, idx) => idx === 0 ? arCtx.moveTo(p.x, p.y) : arCtx.lineTo(p.x, p.y));
-        arCtx.strokeStyle = 'rgba(251, 191, 36, 0.65)';
-        arCtx.lineWidth = 2;
+        rawPts.forEach((p, idx) => {
+          const x = degToScreenX(p.az);
+          const y = altToScreenY(p.alt);
+          if (idx === 0) arCtx.moveTo(x, y);
+          else arCtx.lineTo(x, y);
+        });
+        arCtx.strokeStyle = 'rgba(251, 191, 36, 0.85)';
+        arCtx.lineWidth = 3;
         arCtx.stroke();
 
-        points.forEach(p => {
+        arCtx.font = 'bold 11px sans-serif';
+        for (let i = 0; i < rawPts.length; i++) {
+          const p = rawPts[i];
+          const x = degToScreenX(p.az);
+          const y = altToScreenY(p.alt);
+          if (x < -40 || x > w + 40 || y < -30 || y > h + 30) continue;
+
           arCtx.beginPath();
-          arCtx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-          arCtx.fillStyle = '#fbbf24';
+          arCtx.arc(x, y, 6.5, 0, Math.PI * 2);
+          arCtx.fillStyle = '#fde047';
           arCtx.fill();
-        });
+          arCtx.lineWidth = 1.5;
+          arCtx.strokeStyle = '#78350f';
+          arCtx.stroke();
+
+          if (Math.abs(angleDiff(p.az, state.camAz)) < hfov * 0.6) {
+            const tag = `${formatTime(p.t)} · ${Math.round(p.alt)}°`;
+            const tw = arCtx.measureText(tag).width + 8;
+            arCtx.fillStyle = 'rgba(7, 11, 20, 0.78)';
+            arCtx.fillRect(x + 10, y - 16, tw, 16);
+            arCtx.fillStyle = '#fef08a';
+            arCtx.fillText(tag, x + 14, y - 4);
+          }
+        }
       }
 
       const moon = getMoonPosition(state.dateStr, state.minutesOfDay, state.lat, state.lon);
       const moonAngDiam = 0.53;
-      const moonRadiusPx = Math.max(5, (moonAngDiam / hfov) * w * 0.5);
+      const moonRadiusPx = Math.max(7, (moonAngDiam / hfov) * w * 0.5);
       const mx = degToScreenX(moon.azimuth);
       const my = altToScreenY(moon.altitude);
 
-      const glow = arCtx.createRadialGradient(mx, my, moonRadiusPx * 0.2, mx, my, moonRadiusPx * 3.2);
-      glow.addColorStop(0, 'rgba(254, 240, 138, 0.65)');
+      const glow = arCtx.createRadialGradient(mx, my, moonRadiusPx * 0.2, mx, my, moonRadiusPx * 3.8);
+      glow.addColorStop(0, 'rgba(254, 240, 138, 0.85)');
       glow.addColorStop(1, 'rgba(251, 191, 36, 0)');
       arCtx.fillStyle = glow;
       arCtx.beginPath();
-      arCtx.arc(mx, my, moonRadiusPx * 3.2, 0, Math.PI * 2);
+      arCtx.arc(mx, my, moonRadiusPx * 3.8, 0, Math.PI * 2);
       arCtx.fill();
 
       arCtx.beginPath();
@@ -981,10 +1010,10 @@
       arCtx.lineWidth = 1.5;
       arCtx.strokeRect((w - cropW) / 2, (h - cropH) / 2, cropW, cropH);
 
-      document.getElementById('timeLabel').textContent = formatTime(state.minutesOfDay);
-      document.getElementById('camAzLabel').textContent = `${state.camAz.toFixed(1)}° ${azToCompass(state.camAz)}`;
-      document.getElementById('camAltLabel').textContent = `${state.camPitch.toFixed(1)}°`;
-      document.getElementById('moonPosLabel').textContent = `Az ${moon.azimuth.toFixed(1)}° · Alt ${moon.altitude.toFixed(1)}°`;
+      setTextIfChanged('timeLabel', formatTime(state.minutesOfDay));
+      setTextIfChanged('camAzLabel', `${state.camAz.toFixed(1)}° ${azToCompass(state.camAz)}`);
+      setTextIfChanged('camAltLabel', `${state.camPitch.toFixed(1)}°`);
+      setTextIfChanged('moonPosLabel', `Az ${moon.azimuth.toFixed(1)}° · Alt ${moon.altitude.toFixed(1)}°`);
 
       const cw = cropCanvas.width, ch = cropCanvas.height;
       cropCtx.clearRect(0, 0, cw, ch);
@@ -993,7 +1022,7 @@
 
       const cropHfov = getHov(state.focalMm);
       const cropVfov = cropHfov * (2 / 3);
-      document.getElementById('moonShareVal').textContent = `~${((moonAngDiam / cropHfov) * 100).toFixed(1)}%`;
+      setTextIfChanged('moonShareVal', `~${((moonAngDiam / cropHfov) * 100).toFixed(1)}%`);
 
       const cmx = cw * 0.5 + (angleDiff(moon.azimuth, state.camAz) / cropHfov) * cw;
       const cmy = ch * 0.5 - ((moon.altitude - state.camPitch) / cropVfov) * ch;
@@ -1007,7 +1036,7 @@
       const rw = radarCanvas.width, rh = radarCanvas.height;
       const rcx = rw / 2, rcy = rh / 2, radMax = rw * 0.44;
       radarCtx.clearRect(0, 0, rw, rh);
-      document.getElementById('radarAzVal').textContent = `${Math.round(state.camAz)}°`;
+      setTextIfChanged('radarAzVal', `${Math.round(state.camAz)}°`);
 
       radarCtx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
       radarCtx.beginPath();
@@ -1028,11 +1057,16 @@
       radarCtx.strokeStyle = '#38bdf8';
       radarCtx.lineWidth = 2.5;
       radarCtx.stroke();
-
-      requestAnimationFrame(draw);
     }
 
-    draw();
+    function renderLoop() {
+      rafId = null;
+      if (!needsRender) return;
+      needsRender = false;
+      draw();
+    }
+
+    markDirty();
   </script>
 </body>
 </html>
