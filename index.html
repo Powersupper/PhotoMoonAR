@@ -447,7 +447,6 @@
     const radarCtx = radarCanvas.getContext('2d');
     const videoEl = document.getElementById('cameraFeed');
 
-    // Render scheduling state (dirty flag + cached daily trajectory)
     let needsRender = true;
     let rafId = null;
     let trajectoryCacheKey = '';
@@ -538,15 +537,14 @@
       };
     }
 
+    // Keep full 24h trajectory including below horizon (< 0 deg)
     function getCachedTrajectory() {
       const key = `${state.dateStr}|${state.lat.toFixed(3)}|${state.lon.toFixed(3)}`;
       if (key === trajectoryCacheKey) return trajectoryCache;
       const pts = [];
       for (let t = 0; t <= 1440; t += 30) {
         const pos = getMoonPosition(state.dateStr, t, state.lat, state.lon);
-        if (pos.altitude >= -2) {
-          pts.push({ t, az: pos.azimuth, alt: pos.altitude });
-        }
+        pts.push({ t, az: pos.azimuth, alt: pos.altitude });
       }
       trajectoryCacheKey = key;
       trajectoryCache = pts;
@@ -601,7 +599,7 @@
       const hfov = getHov(state.focalMm);
       const degPerPx = hfov / Math.max(viewW, 400);
       state.camAz = ((state.camAz - dx * degPerPx * 1.4) % 360 + 360) % 360;
-      state.camPitch = Math.max(-15, Math.min(85, state.camPitch + dy * degPerPx * 1.4));
+      state.camPitch = Math.max(-45, Math.min(85, state.camPitch + dy * degPerPx * 1.4));
       markDirty();
     });
 
@@ -706,7 +704,7 @@
         }
       }
       if (typeof e.beta === 'number' && !isNaN(e.beta)) {
-        const nextPitch = Math.max(-15, Math.min(85, e.beta - 75));
+        const nextPitch = Math.max(-45, Math.min(85, e.beta - 75));
         if (Math.abs(nextPitch - state.camPitch) >= 0.25) {
           state.camPitch = nextPitch;
           changed = true;
@@ -901,7 +899,7 @@
         arCtx.fillStyle = grad;
         arCtx.fillRect(0, 0, w, h);
 
-        const horizonY = h * 0.5 + (state.camPitch / vfov) * h;
+        const horizonY0 = h * 0.5 + (state.camPitch / vfov) * h;
         const heightOffset = (state.camHeightM - 25) * 0.65;
 
         arCtx.beginPath();
@@ -909,7 +907,7 @@
         for (let sx = 0; sx <= w; sx += 32) {
           const azAtX = state.camAz + ((sx / w) - 0.5) * hfov;
           const ridgeAlt = 6 + 5 * Math.sin(azAtX * 0.12) + 2.5 * Math.cos(azAtX * 0.29);
-          const sy = horizonY - ((ridgeAlt - state.camPitch) / vfov) * h + heightOffset * 0.25;
+          const sy = horizonY0 - ((ridgeAlt - state.camPitch) / vfov) * h + heightOffset * 0.25;
           arCtx.lineTo(sx, sy);
         }
         arCtx.lineTo(w, h);
@@ -921,7 +919,7 @@
         for (let sx = 0; sx < w; sx += 80) {
           const azAtX = state.camAz + ((sx / w) - 0.5) * hfov;
           const bldgTopAlt = 8 + 9 * Math.abs(Math.sin(azAtX * 0.23 + 1.1));
-          const topY = horizonY - ((bldgTopAlt - state.camPitch) / vfov) * h + heightOffset * 0.5;
+          const topY = horizonY0 - ((bldgTopAlt - state.camPitch) / vfov) * h + heightOffset * 0.5;
           arCtx.fillRect(sx + 4, topY, 72, h - topY);
         }
       } else {
@@ -930,6 +928,24 @@
 
       const degToScreenX = (az) => w * 0.5 + (angleDiff(az, state.camAz) / hfov) * w;
       const altToScreenY = (alt) => h * 0.5 - ((alt - state.camPitch) / vfov) * h;
+
+      // Darken lower hemisphere (below 0 deg horizon) to distinguish from sky hemisphere
+      const y0 = altToScreenY(0);
+      if (y0 < h) {
+        arCtx.fillStyle = 'rgba(2, 6, 15, 0.42)';
+        arCtx.fillRect(0, Math.max(0, y0), w, h - Math.max(0, y0));
+      }
+      if (y0 >= -20 && y0 <= h + 20) {
+        arCtx.strokeStyle = 'rgba(148, 163, 184, 0.45)';
+        arCtx.lineWidth = 1;
+        arCtx.beginPath();
+        arCtx.moveTo(0, y0);
+        arCtx.lineTo(w, y0);
+        arCtx.stroke();
+        arCtx.fillStyle = 'rgba(148, 163, 184, 0.75)';
+        arCtx.font = '10px sans-serif';
+        arCtx.fillText('地平線 0°（以下為天球下）', 10, y0 - 4);
+      }
 
       if (state.showGuideBand) {
         const y20 = altToScreenY(20);
@@ -946,41 +962,55 @@
         arCtx.setLineDash([]);
       }
 
+      // Draw full trajectory segments (above vs below horizon)
       const rawPts = getCachedTrajectory();
       if (rawPts.length > 1) {
-        arCtx.beginPath();
-        rawPts.forEach((p, idx) => {
-          const x = degToScreenX(p.az);
-          const y = altToScreenY(p.alt);
-          if (idx === 0) arCtx.moveTo(x, y);
-          else arCtx.lineTo(x, y);
-        });
-        arCtx.strokeStyle = 'rgba(251, 191, 36, 0.85)';
-        arCtx.lineWidth = 3;
-        arCtx.stroke();
+        for (let i = 0; i < rawPts.length - 1; i++) {
+          const a = rawPts[i];
+          const b = rawPts[i + 1];
+          const x1 = degToScreenX(a.az), y1 = altToScreenY(a.alt);
+          const x2 = degToScreenX(b.az), y2 = altToScreenY(b.alt);
+          const below = a.alt < 0 && b.alt < 0;
+
+          arCtx.save();
+          if (below) {
+            arCtx.setLineDash([5, 5]);
+            arCtx.strokeStyle = 'rgba(217, 119, 6, 0.48)';
+            arCtx.lineWidth = 2;
+          } else {
+            arCtx.strokeStyle = 'rgba(251, 191, 36, 0.88)';
+            arCtx.lineWidth = 3;
+          }
+          arCtx.beginPath();
+          arCtx.moveTo(x1, y1);
+          arCtx.lineTo(x2, y2);
+          arCtx.stroke();
+          arCtx.restore();
+        }
 
         arCtx.font = 'bold 11px sans-serif';
         for (let i = 0; i < rawPts.length; i++) {
           const p = rawPts[i];
           const x = degToScreenX(p.az);
           const y = altToScreenY(p.alt);
-          if (x < -40 || x > w + 40 || y < -30 || y > h + 30) continue;
+          if (x < -50 || x > w + 50 || y < -30 || y > h + 30) continue;
 
+          const isBelow = p.alt < 0;
           arCtx.beginPath();
-          arCtx.arc(x, y, 6.5, 0, Math.PI * 2);
-          arCtx.fillStyle = '#fde047';
+          arCtx.arc(x, y, isBelow ? 4.5 : 6.5, 0, Math.PI * 2);
+          arCtx.fillStyle = isBelow ? 'rgba(245, 158, 11, 0.55)' : '#fde047';
           arCtx.fill();
           arCtx.lineWidth = 1.5;
-          arCtx.strokeStyle = '#78350f';
+          arCtx.strokeStyle = isBelow ? 'rgba(120, 53, 15, 0.6)' : '#78350f';
           arCtx.stroke();
 
           if (Math.abs(angleDiff(p.az, state.camAz)) < hfov * 0.6) {
             const tag = `${formatTime(p.t)} · ${Math.round(p.alt)}°`;
             const tw = arCtx.measureText(tag).width + 8;
-            arCtx.fillStyle = 'rgba(7, 11, 20, 0.78)';
-            arCtx.fillRect(x + 10, y - 16, tw, 16);
-            arCtx.fillStyle = '#fef08a';
-            arCtx.fillText(tag, x + 14, y - 4);
+            arCtx.fillStyle = isBelow ? 'rgba(7, 11, 20, 0.55)' : 'rgba(7, 11, 20, 0.8)';
+            arCtx.fillRect(x + 9, y - 15, tw, 15);
+            arCtx.fillStyle = isBelow ? 'rgba(253, 230, 138, 0.55)' : '#fef08a';
+            arCtx.fillText(tag, x + 13, y - 4);
           }
         }
       }
@@ -990,18 +1020,21 @@
       const moonRadiusPx = Math.max(7, (moonAngDiam / hfov) * w * 0.5);
       const mx = degToScreenX(moon.azimuth);
       const my = altToScreenY(moon.altitude);
+      const moonBelow = moon.altitude < 0;
 
-      const glow = arCtx.createRadialGradient(mx, my, moonRadiusPx * 0.2, mx, my, moonRadiusPx * 3.8);
-      glow.addColorStop(0, 'rgba(254, 240, 138, 0.85)');
-      glow.addColorStop(1, 'rgba(251, 191, 36, 0)');
-      arCtx.fillStyle = glow;
-      arCtx.beginPath();
-      arCtx.arc(mx, my, moonRadiusPx * 3.8, 0, Math.PI * 2);
-      arCtx.fill();
+      if (!moonBelow) {
+        const glow = arCtx.createRadialGradient(mx, my, moonRadiusPx * 0.2, mx, my, moonRadiusPx * 3.8);
+        glow.addColorStop(0, 'rgba(254, 240, 138, 0.85)');
+        glow.addColorStop(1, 'rgba(251, 191, 36, 0)');
+        arCtx.fillStyle = glow;
+        arCtx.beginPath();
+        arCtx.arc(mx, my, moonRadiusPx * 3.8, 0, Math.PI * 2);
+        arCtx.fill();
+      }
 
       arCtx.beginPath();
       arCtx.arc(mx, my, moonRadiusPx, 0, Math.PI * 2);
-      arCtx.fillStyle = moon.altitude < 12 ? '#fdba74' : '#fef9c3';
+      arCtx.fillStyle = moonBelow ? 'rgba(251, 191, 36, 0.35)' : (moon.altitude < 12 ? '#fdba74' : '#fef9c3');
       arCtx.fill();
 
       const cropW = Math.min(w * 0.72, 400);
@@ -1030,7 +1063,7 @@
 
       cropCtx.beginPath();
       cropCtx.arc(cmx, cmy, cmr, 0, Math.PI * 2);
-      cropCtx.fillStyle = '#fef08a';
+      cropCtx.fillStyle = moonBelow ? 'rgba(254, 240, 138, 0.35)' : '#fef08a';
       cropCtx.fill();
 
       const rw = radarCanvas.width, rh = radarCanvas.height;
@@ -1047,7 +1080,7 @@
       const mRad = (moon.azimuth - 90) * Math.PI / 180;
       radarCtx.beginPath();
       radarCtx.arc(rcx + Math.cos(mRad) * mDist, rcy + Math.sin(mRad) * mDist, 5, 0, Math.PI * 2);
-      radarCtx.fillStyle = '#fbbf24';
+      radarCtx.fillStyle = moonBelow ? 'rgba(251, 191, 36, 0.4)' : '#fbbf24';
       radarCtx.fill();
 
       const cRad = (state.camAz - 90) * Math.PI / 180;
